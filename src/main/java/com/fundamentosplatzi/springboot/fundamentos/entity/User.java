@@ -20,11 +20,11 @@ public class User {
     @Column(name = "name", length = 55)
     private String name;
 
-    @Column(name = "email", length = 55)
+    @Column(name = "email", length = 55, unique = true)
     private String email;
 
     @Column(name = "birthDate")
-    private LocalDate birthDate;
+        private LocalDate birthDate;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JsonManagedReference

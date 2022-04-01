@@ -8,6 +8,7 @@ import com.fundamentosplatzi.springboot.fundamentos.entity.Post;
 import com.fundamentosplatzi.springboot.fundamentos.entity.User;
 import com.fundamentosplatzi.springboot.fundamentos.pojo.UserPojo;
 import com.fundamentosplatzi.springboot.fundamentos.repository.UserRepository;
+import com.fundamentosplatzi.springboot.fundamentos.service.UserService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -32,18 +33,20 @@ public class FundamentosApplication implements CommandLineRunner {
     private MyBeanWithProperties myBeanWithProperties;
     private UserPojo userPojo;
     private UserRepository userRepository;
+    private UserService userService;
 
 
     public FundamentosApplication(@Qualifier("componenteTwoImplement") ComponentDependency componentDependency,
                                   MyBean myBean, MyBeanWithDependency myBeanWithDependency,
                                   MyBeanWithProperties myBeanWithProperties, UserPojo userPojo,
-                                  UserRepository userRepository) {
+                                  UserRepository userRepository, UserService userService) {
         this.componentDependency = componentDependency;
         this.myBean = myBean;
         this.myBeanWithDependency = myBeanWithDependency;
         this.myBeanWithProperties = myBeanWithProperties;
         this.userPojo = userPojo;
         this.userRepository = userRepository;
+        this.userService = userService;
 
     }
 
@@ -57,7 +60,7 @@ public class FundamentosApplication implements CommandLineRunner {
         ejemplosAnteriores();
         saveUsersInDataBase();
         getInformationJpqlFromUser();
-
+        saveWithtErrorTransactional();
         /*
         componentDependency.saludar();
         myBean.print();
@@ -74,6 +77,26 @@ public class FundamentosApplication implements CommandLineRunner {
         }*/
     }
 
+    private void saveWithtErrorTransactional() {
+        User test1 = new User("TestTransactional1", "TestTransactional1@domain.com", LocalDate.now(), new ArrayList<Post>());
+        User test2 = new User("TestTransactional2", "TestTransactional2@domain.com", LocalDate.now(), new ArrayList<Post>());
+        User test3 = new User("TestTransactional3", "TestTransactional1@domain.com", LocalDate.now(), new ArrayList<Post>());
+        User test4 = new User("TestTransactional4", "TestTransactional4@domain.com", LocalDate.now(), new ArrayList<Post>());
+
+        List<User> userList = Arrays.asList(test1, test2, test3, test4);
+
+        try {
+            userService.saveTransactional(userList);
+
+        } catch (Exception e) {
+            LOGGER.error("Esta es una Exception error dentro del method saveWithtErrorTransactional " + e);
+        }
+
+        userService.getAllUsers().stream().forEach(user ->
+                LOGGER.info("User dentro del method saveWithtErrorTransactional " + user));
+    }
+
+
     private void getInformationJpqlFromUser() {
         LOGGER.info("Usuario con metodo findByUserEmail " +
                 userRepository.findByUserEmail("juliet@domain.com")
@@ -81,6 +104,36 @@ public class FundamentosApplication implements CommandLineRunner {
 
         userRepository.findAndSort("user", Sort.by("id").descending())
                 .stream().forEach(user -> LOGGER.info("User whith method findAndSort " + user));
+
+        userRepository.findByName("user8").stream()
+                .forEach(user -> LOGGER.info("User whith query method  " + user));
+
+        LOGGER.info("Usuario con metodo query findByEmailAndName " +
+                userRepository.findByEmailAndName("daniela@domain.com", "Daniela")
+                        .orElseThrow(() -> new RuntimeException("Usuario No se enconto ")));
+
+        userRepository.findByNameLike("%J%").stream()
+                .forEach(user -> LOGGER.info("User whith query method findByNameLike " + user));
+
+
+        userRepository.findByNameOrEmail("Juliet", "john@domain.com").stream()
+                .forEach(user -> LOGGER.info("User whith query method findByNameOrEmail " + user));
+
+        userRepository.findByBirthDateBetween(LocalDate.of(2021, 3, 27),
+                        LocalDate.of(2021, 7, 22)).stream()
+                .forEach(user -> LOGGER.info("User whith query method findByBirthDateBetween " + user));
+
+        userRepository.findByNameLikeOrderByIdDesc("%u%").stream()
+                .forEach(user -> LOGGER.info("User whith query method findByNameLikeOrderByIdDesc " + user));
+
+        userRepository.findByNameContainingOrderByIdDesc("use").stream()
+                .forEach(user -> LOGGER.info("User whith query method findByNameContainingOrderByIdDesc " + user));
+
+        LOGGER.info("Usuario con metodo query getAllByBirthDateAndEmail " +
+                userRepository.getAllByBirthDateAndEmail(LocalDate.of(2021, 07, 22),
+                        "daniela@domain.com").orElseThrow(() ->
+                        new RuntimeException("Usuario No se enconto por named parameter ")));
+
     }
 
     private void saveUsersInDataBase() {
@@ -92,7 +145,7 @@ public class FundamentosApplication implements CommandLineRunner {
         User user6 = new User("user6", "user6@domain.com", LocalDate.of(2021, 10, 25), new ArrayList<Post>());
         User user7 = new User("user7", "user7@domain.com", LocalDate.of(2021, 12, 26), new ArrayList<Post>());
         User user8 = new User("user8", "user8@domain.com", LocalDate.of(2021, 1, 27), new ArrayList<Post>());
-        User user9 = new User("user9", "user9@domain.com", LocalDate.of(2021, 2, 28), new ArrayList<Post>());
+        User user9 = new User("user8", "user9@domain.com", LocalDate.of(2021, 2, 28), new ArrayList<Post>());
         User user10 = new User("user10", "user10@domain.com", LocalDate.of(2021, 3, 29), new ArrayList<Post>());
         User user11 = new User("user11", "user11@domain.com", LocalDate.of(2021, 4, 30), new ArrayList<Post>());
         User user12 = new User("user12", "user12@domain.com", LocalDate.of(2021, 5, 31), new ArrayList<Post>());
