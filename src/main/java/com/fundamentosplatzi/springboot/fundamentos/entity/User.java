@@ -1,5 +1,6 @@
 package com.fundamentosplatzi.springboot.fundamentos.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.databind.annotation.JacksonStdImpl;
 
@@ -24,10 +25,11 @@ public class User {
     private String email;
 
     @Column(name = "birthDate")
-        private LocalDate birthDate;
+    private LocalDate birthDate;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JsonManagedReference
+    //@JsonManagedReference
+    @JsonBackReference
     private List<Post> postList = new ArrayList<>();
 
     public User() {
@@ -38,6 +40,10 @@ public class User {
         this.email = email;
         this.birthDate = birthDate;
         this.postList = postList;
+    }
+
+    public User(Long id) {
+        this.id = id;
     }
 
     public Long getId() {
